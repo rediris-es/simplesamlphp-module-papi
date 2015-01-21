@@ -1,5 +1,5 @@
 {
-    "name": "simplesamlphp/simplesamlphp-module-papi",
+    "name": "rediris-es/simplesamlphp-module-papi",
     "description": "A SimpleSAMLphp module adding support for the PAPI protocol.",
     "type": "simplesamlphp-module",
     "keywords": [ "simplesamlphp", "PAPI", "RedIRIS", "SIR" ],
