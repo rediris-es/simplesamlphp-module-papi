@@ -9,6 +9,23 @@ This authentication module makes use of an external library, [_phpPoA_](https://
 order to authenticate users by means of the PAPI protocol. It can therefore be used to bridge between protocols,
 behaving like a PAPI _Point of Access_ or as a _Service Provider_.
 
+Installation
+------------
+
+Once you have installed SimpleSAMLphp, installing this module is very simple. Just execute the following
+command in the root of your SimpleSAMLphp installation:
+
+```
+composer.phar require rediris-es/simplesamlphp-module-papi:dev-master
+```
+
+where `dev-master` instructs Composer to install the `master` branch from the Git repository. See the
+[releases](https://github.com/rediris-es/simplesamlphp-module-papi/releases) available if you
+want to use a stable version of the module.
+
+Usage
+-----
+
 To use this module, enable it by creating a file named `enable` in the `modules/papi/` directory. Then you need to add
 an authentication source which makes use of the `papi:PAPI` module to the `config/authsources.php` file:
 
