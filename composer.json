@@ -7,10 +7,17 @@
         {
             "name": "Jaime Pérez Crespo",
             "email": "jaime.perez@uninett.no"
+        },
+        {
+            "name": "Jose Nuñez Herrero",
+            "email": "jose.nunez@getronics.com"
         }
     ],
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/rediris-es/phppoa" }
+    ],
     "require": {
-        "simplesamlphp/composer-module-installer": "~1.0"
+        "simplesamlphp/composer-module-installer": "~1.0",
+        "rediris-es/phppoa": "dev-develop"
     }
 }
-
