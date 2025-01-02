@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "simplesamlphp/composer-module-installer": "~1.0"
+        "simplesamlphp/composer-module-installer": "~1.0",
+        "rediris-es/phppoa": "dev-develop"
     }
 }
 
