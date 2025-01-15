@@ -5,9 +5,15 @@
  *
  * @author Jaime Perez, RedIRIS
  */
-include 'poa2/PoA.php';
+namespace SimpleSAML\Module\papi\Auth\Source;
 
-class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
+
+use RedIRIS\PoA\PoA;
+use SimpleSAML\Auth\Source;
+use SimpleSAML\Auth\State;
+use RedIRIS\PoA\Conf\Hook;
+
+class PAPI extends Source
 {
     /**
      * The string used to identify our states.
@@ -66,6 +72,7 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
         if (array_key_exists('hli', $config)) {
             $this->_hli = $config['hli'];
         }
+        
     }
 
     /**
@@ -82,8 +89,7 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
         if (!empty($this->_papiopoa)) {
             $params['PAPIOPOA'] = $this->_papiopoa;
         }
-        $params['URL'] = $params['URL'] . urlencode('&SSPStateID=' . $this->_stateId);
-
+        $params['URL'] = $params['URL'] .'?'.urlencode('SSPStateID=' . $this->_stateId);
         return false;
     }
 
@@ -92,47 +98,43 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
      *
      * @param array &$state Information about the current authentication
      */
-    public function authenticate(&$state)
+    public function authenticate(array &$state): void
     {
         assert('is_array($state)');
-        $this->_papiopoa = $state['SPMetadata']['entityid'];
-        $relstate = '';
-
+		if (isset($state['SPMetadata'])) {
+			$this->_papiopoa = $state['SPMetadata']['entityid'];
+			$relstate = '';
+		}
         // if relayState is not set, generate an internal relayState value
         // (this shouldn't be addressed here, but not doing so, might result in problems at the IdP side for certain
         // implementations ...)
         if (!isset($state['saml:RelayState'])) {
             $state['saml:RelayState'] = '&RelayState=' . uniqid();
         }
-
         // If RelayState exists in state array, extract it... we don't want any additional params...
         preg_match('/((.*)&RelayState=([^&]*))/', $state['saml:RelayState'], $relstate, PREG_OFFSET_CAPTURE);
-
         // We only want the exact RelayState value
         if (!empty($relstate[3][0])) {
             $state['saml:RelayState'] = urldecode($relstate[3][0]);
         }
-
         // if request contains a providerId, load the state
         if (isset($_REQUEST['providerId'])) {
             $this->_stateId = (string)$_REQUEST['providerId'];
-            $state = SimpleSAML_Auth_State::loadState($this->_stateId, self::STAGE_INIT);
+            $state = SimpleSAML\Auth\State::loadState($this->_stateId, self::STAGE_INIT);
         }
-
         // check if we are returning back from PAPI authentication
         if (isset($_REQUEST['SSPStateID'])) {
             // yes! restore original request
             $this->_stateId = (string)$_REQUEST['SSPStateID'];
-            $state = SimpleSAML_Auth_State::loadState($this->_stateId, self::STAGE_INIT);
+            $state = State::loadState($this->_stateId, self::STAGE_INIT);
         } elseif (!$this->_poa->isAuthenticated()) {
             // no! we have to save the request
             // We are will need the authId in order to retrieve this authentication source later.
             $state[self::AUTHID] = $this->authId;
-            $this->_stateId = SimpleSAML_Auth_State::saveState($state, self::STAGE_INIT);
+            $this->_stateId = State::saveState($state, self::STAGE_INIT);
 
             $this->_poa->addHook('PAPI_REDIRECT_URL_FINISH', new Hook([$this, 'modifyParams']));
         }
-
         $this->_poa->authenticate();
         $this->_attrs = $this->_poa->getAttributes();
         $state['Attributes'] = $this->parseAttributes($this->_attrs);
@@ -148,13 +150,13 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
     protected function parseAttributes($attrs)
     {
         assert('is_array($attrs)');
-
-        foreach ($attrs as $name => $value) {
-            if (!is_array($value)) {
-                $attrs[$name] = [$value];
-            }
-        }
-
+		if (isset($attrs)) {
+			foreach ($attrs as $name => $value) {
+				if (!is_array($value)) {
+					$attrs[$name] = [$value];
+				}
+			}
+		}
         return $attrs;
     }
 
@@ -171,7 +173,7 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
      *
      * @param array &$state Information about the current logout operation
      */
-    public function logout(&$state)
+    public function logout(array &$state): void
     {
         assert('is_array($state)');
 
@@ -188,7 +190,7 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source
             $this->_poa->logout(true);
         } elseif (isset($_REQUEST['SSPStateID'])) {
             $this->_stateId = (string)$_REQUEST['SSPStateID'];
-            $state = SimpleSAML_Auth_State::loadState($this->_stateId, self::STAGE_INIT);
+            $state = SimpleSAML\Auth\State::loadState($this->_stateId, self::STAGE_INIT);
         } else {
             return;
         }
